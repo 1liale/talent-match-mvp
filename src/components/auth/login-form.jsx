@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,14 +8,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Image from "next/image";
 import { login, signup, signInWithOAuth } from "@/utils/supabase/auth-actions";
 import { UserTypeSwitcher } from "@/components/auth/user-type-switcher";
+import { useRouter } from "next/navigation";
 
-export const LoginForm = () => {
+export const AuthForm = ({ mode = "signin" }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("applicant"); // Default to applicant
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(mode === "signin");
+  const router = useRouter();
+
+  // Update isLogin state when mode prop changes
+  useEffect(() => {
+    setIsLogin(mode === "signin");
+  }, [mode]);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -72,12 +79,17 @@ export const LoginForm = () => {
     }
   };
 
+  const toggleMode = () => {
+    const newMode = isLogin ? "signup" : "signin";
+    router.push(`/auth/${newMode}`);
+  };
+
   return (
     <>
-      <UserTypeSwitcher userType={userType} setUserType={setUserType} />
+      {!isLogin && <UserTypeSwitcher userType={userType} setUserType={setUserType} />}
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>{isLogin ? "Login" : "Sign Up"}</CardTitle>
+          <CardTitle>{isLogin ? "Sign In" : "Sign Up"}</CardTitle>
           <CardDescription>
             {isLogin
               ? "Enter your credentials to access your account"
@@ -153,7 +165,7 @@ export const LoginForm = () => {
             </div>
             {message && <p className="text-sm text-red-500">{message}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : isLogin ? "Login" : "Sign Up"}
+              {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
         </CardContent>
@@ -161,12 +173,15 @@ export const LoginForm = () => {
           <Button
             variant="ghost"
             className="w-full"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={toggleMode}
           >
-            {isLogin ? "Need an account? Sign Up" : "Already have an account? Login"}
+            {isLogin ? "Need an account? Sign Up" : "Already have an account? Sign In"}
           </Button>
         </CardFooter>
       </Card>
     </>
   );
-} 
+}
+
+// Export with old name for backward compatibility
+export const LoginForm = AuthForm; 
