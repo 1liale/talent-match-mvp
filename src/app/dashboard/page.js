@@ -1,41 +1,29 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { TypographyH1, TypographyH2, TypographyH3, TypographyP } from "@/components/ui/typography";
 
 const Dashboard = () => {
-  const { user, loading, userType, signOut } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/");
-    }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // This will redirect to the login page
-  }
+  // Mock user data (replace with actual data fetching)
+  const user = { email: "user@example.com" };
+  const userType = "applicant";
+  
+  const signOut = () => {
+    // Add sign out logic
+    router.push("/");
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
       <header className="max-w-7xl mx-auto flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-serif font-bold text-[#6a6344]">Talent Match</h1>
+        <TypographyH1 className="text-2xl">Talent Match</TypographyH1>
         <div className="flex items-center gap-4">
-          <p className="text-sm text-foreground/80">
+          <TypographyP className="text-sm">
             Signed in as: {user.email}
-          </p>
+          </TypographyP>
           <Button variant="outline" size="sm" onClick={signOut}>
             Sign Out
           </Button>
@@ -43,47 +31,47 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto">
-        <h2 className="text-xl font-serif font-bold mb-6 text-[#6a6344]">
+        <TypographyH2 className="mb-6">
           {userType === "hiring"
             ? "Hiring Manager Dashboard"
             : "Applicant Dashboard"}
-        </h2>
+        </TypographyH2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {userType === "hiring" ? (
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-serif">Post a Job</CardTitle>
+                  <TypographyH3>Post a Job</TypographyH3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/80 mb-4">
+                  <TypographyP className="mb-4">
                     Create a new job listing with requirements
-                  </p>
+                  </TypographyP>
                   <Button>Create Job Post</Button>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-serif">Candidate Matches</CardTitle>
+                  <TypographyH3>Candidate Matches</TypographyH3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/80 mb-4">
+                  <TypographyP className="mb-4">
                     View AI-suggested candidate matches for your jobs
-                  </p>
+                  </TypographyP>
                   <Button variant="outline">View Matches</Button>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-serif">Analytics</CardTitle>
+                  <TypographyH3>Analytics</TypographyH3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/80 mb-4">
+                  <TypographyP className="mb-4">
                     Track job posting performance and candidate insights
-                  </p>
+                  </TypographyP>
                   <Button variant="outline">View Analytics</Button>
                 </CardContent>
               </Card>
@@ -92,36 +80,36 @@ const Dashboard = () => {
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-serif">Find Jobs</CardTitle>
+                  <TypographyH3>Find Jobs</TypographyH3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/80 mb-4">
+                  <TypographyP className="mb-4">
                     Browse and search for job opportunities
-                  </p>
+                  </TypographyP>
                   <Button>Search Jobs</Button>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-serif">Job Matches</CardTitle>
+                  <TypographyH3>Job Matches</TypographyH3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/80 mb-4">
+                  <TypographyP className="mb-4">
                     View your AI-recommended job matches
-                  </p>
+                  </TypographyP>
                   <Button variant="outline">View Matches</Button>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-serif">Profile</CardTitle>
+                  <TypographyH3>Profile</TypographyH3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/80 mb-4">
+                  <TypographyP className="mb-4">
                     Update your resume and skills profile
-                  </p>
+                  </TypographyP>
                   <Button variant="outline">Edit Profile</Button>
                 </CardContent>
               </Card>
@@ -132,10 +120,10 @@ const Dashboard = () => {
 
       {/* Placeholder for Cohere AI integration */}
       <div className="max-w-7xl mx-auto mt-12 p-6 bg-secondary rounded-lg border">
-        <h3 className="text-lg font-serif font-bold mb-2">Cohere AI Integration</h3>
-        <p className="text-foreground/80 mb-4">
+        <TypographyH3 className="mb-2">Cohere AI Integration</TypographyH3>
+        <TypographyP className="mb-4">
           This section will integrate with Cohere API for enhanced matching and screening.
-        </p>
+        </TypographyP>
         <div className="text-sm text-foreground/80 p-3 bg-card rounded border">
           Placeholder for Cohere API integration
         </div>

@@ -1,11 +1,8 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth-context";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const UserTypeSwitcher = () => {
-  const { userType, setUserRole } = useAuth();
-
+export const UserTypeSwitcher = ({ userType, setUserRole }) => {
   return (
     <div className="w-full max-w-md mx-auto mb-6">
       <Tabs 
