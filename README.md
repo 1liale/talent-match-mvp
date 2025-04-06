@@ -2,7 +2,11 @@
 
 An AI-powered talent matching platform that efficiently connects hiring managers with suitable candidates.
 
-![Application Architecture](./public/application.png)
+![Landing Page](./public/landing-page.png)
+(landing page)
+
+![Auth Page](./public/auth-page.png)
+(auth page)
 
 ## Features
 
