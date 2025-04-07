@@ -15,7 +15,7 @@ export async function GET(request) {
       
       if (error) {
         console.error('Error exchanging code for session:', error)
-        return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+        return NextResponse.redirect(`${origin}/error`)
       }
       
       // Get the forwarded host for production environments with load balancers
@@ -32,10 +32,10 @@ export async function GET(request) {
       }
     } catch (error) {
       console.error('Unexpected error in OAuth callback:', error)
-      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+      return NextResponse.redirect(`${origin}/error`)
     }
   }
   
   // No code provided
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  return NextResponse.redirect(`${origin}/error`)
 }

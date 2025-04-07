@@ -20,6 +20,7 @@ import Image from "next/image";
 import { TypographyH3 } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Logo from "@/components/base/logo";
 
 const candidateMenuItems = [
   { title: "Dashboard", icon: Home, url: "/dashboard" },
@@ -37,11 +38,6 @@ const employerMenuItems = [
   { section: "Recruitment" },
   { title: "Post Jobs", icon: FileText, url: "/post-jobs" },
   { title: "Talent Search", icon: Search, url: "/talent-search" },
-  { section: "Applications" },
-  { title: "Manage Applications", icon: Briefcase, url: "/manage-applications" },
-  { title: "Interviews", icon: Users, url: "/interviews" },
-  { section: "Analytics" },
-  { title: "Recruitment Stats", icon: BookOpen, url: "/analytics" },
 ];
 
 const Sidebar = ({ userType = "candidate" }) => {
@@ -94,16 +90,13 @@ const Sidebar = ({ userType = "candidate" }) => {
     >
       <div className="h-full flex flex-col bg-card border-border overflow-hidden">
         <div className="h-[70px] border-b border-border p-3 mb-2 flex items-center justify-between">
-          <Link href="/">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold">TM</div>
-              {isOpen && (
-                <TypographyH3 className="text-lg">
-                  Talent<span className="text-primary">Match</span>
-                </TypographyH3>
-              )}
+          {isOpen ? (
+            <Logo />
+          ) : (
+            <div className="flex items-center justify-center w-8 h-8 bg-primary rounded-lg">
+              <span className="text-primary-foreground font-bold">TM</span>
             </div>
-          </Link>
+          )}
         </div>
 
         <div className="flex-1 p-2 flex flex-col justify-start gap-1 overflow-y-auto">

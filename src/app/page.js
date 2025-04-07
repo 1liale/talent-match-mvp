@@ -16,14 +16,15 @@ import {
   TypographySmall
 } from "@/components/ui/typography";
 import {
-  GitMerge,
-  Globe,
-  Pencil,
+  ChartNetwork,
+  BrainCircuit,
+  Blocks
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Card
 } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
 
 // Typography custom components
 const HeroTitle = ({ children, className }) => (
@@ -34,6 +35,8 @@ const HeroTitle = ({ children, className }) => (
 
 // Hero Section Component
 const HeroSection = () => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <section className="py-20 md:py-28 lg:py-32 relative">
       <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-center">
@@ -49,10 +52,10 @@ const HeroSection = () => {
           </TypographyLead>
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Button size="lg" className="w-full sm:w-auto shadow-primary rounded-xl px-6 h-12" asChild>
-              <Link href="/auth/signup?role=candidate">Explore Positions</Link>
+              <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=candidate"}>Explore Positions</Link>
             </Button>
             <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 rounded-xl px-6 h-12" asChild>
-              <Link href="/auth/signup?role=employer">Find Talent →</Link>
+              <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=employer"}>Find Talent →</Link>
             </Button>
           </div>
         </div>
@@ -118,19 +121,19 @@ const FeaturesSection = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
           <PrimaryCardLarge 
-            icon={<GitMerge size={28} className="text-primary" />}
+            icon={<ChartNetwork  size={28} className="text-primary" />}
             title="Smart Analytics"
             description="Our platform provides data-driven insights to help make confident decisions and reduce unconscious bias in talent acquisition."
           />
           
           <PrimaryCardLarge 
-            icon={<Globe size={28} className="text-primary" />}
+            icon={<BrainCircuit size={28} className="text-primary" />}
             title="Intelligent Matching"
             description="Our technology evaluates candidate profiles by analyzing resume data to identify key competencies, experience, and qualifications."
           />
           
           <PrimaryCardLarge 
-            icon={<Pencil size={28} className="text-primary" />}
+            icon={<Blocks size={28} className="text-primary" />}
             title="Effortless Integration"
             description="Our platform offers a user-friendly interface that smoothly connects with your existing tools, enabling effective team collaboration."
           />
@@ -167,6 +170,8 @@ const StatsSection = () => {
 
 // CTA Section Component
 const CTASection = () => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <section className="py-24 md:py-32 relative">
       <div className="container mx-auto px-4 md:px-6">
@@ -189,10 +194,10 @@ const CTASection = () => {
               </TypographyLead>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="w-full sm:w-auto shadow-primary rounded-xl px-6 h-12" asChild>
-                  <Link href="/auth/signup?role=candidate">Explore Positions</Link>
+                  <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=candidate"}>Explore Positions</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 rounded-xl px-6 h-12" asChild>
-                  <Link href="/auth/signup?role=employer">Find Talent →</Link>
+                  <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=employer"}>Find Talent →</Link>
                 </Button>
               </div>
             </div>

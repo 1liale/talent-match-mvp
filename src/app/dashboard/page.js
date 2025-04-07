@@ -551,7 +551,7 @@ const EmployerDashboard = () => {
           </Button>
         </div>
         
-        <Card>
+        {/* <Card>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -599,7 +599,7 @@ const EmployerDashboard = () => {
               </tbody>
             </table>
           </div>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

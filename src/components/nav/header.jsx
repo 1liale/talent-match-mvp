@@ -3,9 +3,20 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/base/logo";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated, signOut } = useAuth();
+  const router = useRouter();
+  
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      router.push('/');
+    }
+  };
   
   return (
     <header className="py-5 px-4 md:px-6 lg:px-8 border-b border-muted/60">
@@ -23,12 +34,28 @@ const Header = () => {
           </Button>
         </nav>
         <div className="hidden md:flex items-center gap-6">
-          <Button variant="link" className="text-foreground/70 hover:text-foreground" asChild>
-            <Link href="/auth/signin">Log in</Link>
-          </Button>
-          <Button className="shadow-primary rounded-xl px-6" asChild>
-            <Link href="/auth/signup">Get Started</Link>
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <Button variant="link" className="text-foreground/70 hover:text-foreground" asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <Button 
+                onClick={handleSignOut} 
+                className="shadow-primary rounded-xl px-6"
+              >
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="link" className="text-foreground/70 hover:text-foreground" asChild>
+                <Link href="/auth/signin">Log in</Link>
+              </Button>
+              <Button className="shadow-primary rounded-xl px-6" asChild>
+                <Link href="/auth/signup">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
         
         {/* Mobile menu button */}
@@ -80,21 +107,45 @@ const Header = () => {
             </Button>
           </nav>
           <div className="flex flex-col gap-3">
-            <Button 
-              variant="link" 
-              className="text-foreground/70 hover:text-foreground w-full text-center py-2"
-              onClick={() => setMobileMenuOpen(false)}
-              asChild
-            >
-              <Link href="/auth/signin">Log in</Link>
-            </Button>
-            <Button 
-              className="w-full shadow-primary rounded-xl"
-              onClick={() => setMobileMenuOpen(false)}
-              asChild
-            >
-              <Link href="/auth/signup">Get Started</Link>
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button 
+                  variant="link" 
+                  className="text-foreground/70 hover:text-foreground w-full text-center py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                  asChild
+                >
+                  <Link href="/dashboard">Dashboard</Link>
+                </Button>
+                <Button 
+                  className="w-full shadow-primary rounded-xl"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleSignOut();
+                  }}
+                >
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="link" 
+                  className="text-foreground/70 hover:text-foreground w-full text-center py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                  asChild
+                >
+                  <Link href="/auth/signin">Log in</Link>
+                </Button>
+                <Button 
+                  className="w-full shadow-primary rounded-xl"
+                  onClick={() => setMobileMenuOpen(false)}
+                  asChild
+                >
+                  <Link href="/auth/signup">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

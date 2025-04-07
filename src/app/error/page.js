@@ -23,10 +23,10 @@ export default function Error({ error, reset }) {
           </p>
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
-          <Button onClick={() => reset()} className="w-full" variant="default">
+          {/* <Button onClick={() => reset()} className="w-full" variant="default">
             Try Again
-          </Button>
-          <Button onClick={() => router.push('/')} className="w-full" variant="outline">
+          </Button> */}
+          <Button onClick={() => router.push('/')} className="w-full" variant="default">
             Return Home
           </Button>
         </CardFooter>
