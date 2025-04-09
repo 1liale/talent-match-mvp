@@ -37,17 +37,41 @@ export async function updateSession(request) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    request.nextUrl.pathname !== '/' &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/error')
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  const { pathname } = request.nextUrl
+
+  // Handle protected routes - these require authentication
+  const isProtectedPath = 
+    pathname.startsWith('/dashboard') || 
+    pathname === '/onboarding';
+
+  if (isProtectedPath && !user) {
+    // Redirect unauthenticated users to the error page
     const url = request.nextUrl.clone()
     url.pathname = '/error'
     return NextResponse.redirect(url)
   }
+
+  // If user is authenticated and trying to access dashboard, check onboarding status
+  if (user && pathname.startsWith('/dashboard')) {
+    try {
+      // Fetch the user profile to check if onboarding is completed
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .single()
+
+      // If there's no profile or onboarding is not completed, redirect to onboarding
+      if (error || !profile || profile.onboarding_completed === false) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/onboarding'
+        return NextResponse.redirect(url)
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error)
+    }
+  }
+
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

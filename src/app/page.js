@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/nav/header";
+import { UnauthHeader } from "@/components/nav/header";
 import Footer from "@/components/nav/footer";
 import { PrimaryBadge, SecondaryBadge } from "@/components/base/badge";
 import { PrimaryCardLarge } from "@/components/base/card";
@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import {
   Card
 } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/auth-context";
 
 // Typography custom components
 const HeroTitle = ({ children, className }) => (
@@ -52,10 +52,10 @@ const HeroSection = () => {
           </TypographyLead>
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Button size="lg" className="w-full sm:w-auto shadow-primary rounded-xl px-6 h-12" asChild>
-              <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=candidate"}>Explore Positions</Link>
+              <Link href={isAuthenticated ? "/dashboard" : "/signup"}>Explore Positions</Link>
             </Button>
             <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 rounded-xl px-6 h-12" asChild>
-              <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=employer"}>Find Talent →</Link>
+              <Link href={isAuthenticated ? "/dashboard" : "/signup"}>Find Talent →</Link>
             </Button>
           </div>
         </div>
@@ -194,10 +194,10 @@ const CTASection = () => {
               </TypographyLead>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="w-full sm:w-auto shadow-primary rounded-xl px-6 h-12" asChild>
-                  <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=candidate"}>Explore Positions</Link>
+                  <Link href={isAuthenticated ? "/dashboard" : "/signup"}>Explore Positions</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 rounded-xl px-6 h-12" asChild>
-                  <Link href={isAuthenticated ? "/dashboard" : "/auth/signup?role=employer"}>Find Talent →</Link>
+                  <Link href={isAuthenticated ? "/dashboard" : "/signup"}>Find Talent →</Link>
                 </Button>
               </div>
             </div>
@@ -220,7 +220,7 @@ const CTASection = () => {
 export default function Page() {
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
-      <Header />
+      <UnauthHeader />
       <HeroSection />
       <FeaturesSection />
       <StatsSection />

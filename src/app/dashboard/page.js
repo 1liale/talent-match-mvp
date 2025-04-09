@@ -1,21 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   TypographyH1,
   TypographyH2,
-  TypographyH3,
-  TypographyP,
   TypographyLead
 } from "@/components/ui/typography";
-import Sidebar from "@/components/nav/sidebar";
-import { PrimaryCardMedium, PrimaryCardSmall } from "@/components/base/card";
+import { 
+  StatsCard,
+  ApplicationCard,
+  JobCard,
+  CandidateCard,
+} from "@/components/base/card";
 import { PrimaryBadge } from "@/components/base/badge";
-import { Bell, ChevronRight, Users, Briefcase, Star, Clock, Calendar, CheckCircle, Plus, Clipboard, Search, Building } from "lucide-react";
+import { ChevronRight, Users, Briefcase, Star, Calendar, CheckCircle, Plus, Clipboard, Search } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { createClient } from "@/utils/supabase/client";
 
 // Mock data
 const mockApplications = [
@@ -90,7 +92,7 @@ const mockCandidates = [
     experience: "7 years",
     skills: ["React", "TypeScript", "Node.js"],
     matchScore: 95,
-    avatar: "/avatars/alex.jpg"
+    avatar: "https://ui-avatars.com/api/?name=Alex+Johnson&background=0D8ABC&color=fff"
   },
   {
     id: 2,
@@ -100,7 +102,7 @@ const mockCandidates = [
     experience: "5 years",
     skills: ["Python", "React", "AWS"],
     matchScore: 89,
-    avatar: "/avatars/samantha.jpg"
+    avatar: "https://ui-avatars.com/api/?name=Samantha+Lee&background=10B981&color=fff"
   },
   {
     id: 3,
@@ -110,54 +112,71 @@ const mockCandidates = [
     experience: "4 years",
     skills: ["Figma", "Adobe XD", "HTML/CSS"],
     matchScore: 92,
-    avatar: "/avatars/marcus.jpg"
+    avatar: "https://ui-avatars.com/api/?name=Marcus+Chen&background=6366F1&color=fff"
   },
 ];
-
-// Status badge component
-const StatusBadge = ({ status }) => {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Interview":
-        return "bg-green-100 text-green-800";
-      case "Application Review":
-        return "bg-blue-100 text-blue-800";
-      case "Skills Assessment":
-        return "bg-purple-100 text-purple-800";
-      case "Rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  return (
-    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(status)}`}>
-      {status}
-    </span>
-  );
-};
-
-// Match score component
-const MatchScore = ({ score }) => {
-  const getScoreColor = (score) => {
-    if (score >= 90) return "text-green-600";
-    if (score >= 80) return "text-blue-600";
-    return "text-orange-600";
-  };
-
-  return (
-    <div className="flex items-center gap-1">
-      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-      <span className={`text-sm font-medium ${getScoreColor(score)}`}>{score}% match</span>
-    </div>
-  );
-};
 
 // Dashboard component
 export default function DashboardPage() {
   // In a real app, this would come from authentication state
   const [userType, setUserType] = useState("candidate");
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const { user: authUser } = useAuth();
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!authUser) return;
+      
+      setLoading(true);
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching profile:', error);
+          // Set basic user info from auth
+          setUser({
+            email: authUser.email,
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Set full user info from profile
+        setUser({
+          email: authUser.email,
+          username: data.username,
+          name: data.full_name,
+          role: data.job_title || data.user_type,
+          avatarUrl: data.avatar_url,
+        });
+        
+        // Set user type based on user_type if available
+        if (data.user_type) {
+          setUserType(data.user_type === 'applicant' ? 'candidate' : 'employer');
+        }
+            
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchUserProfile();
+  }, [authUser, supabase]);
+
+
+  if (loading) {
+    return null;
+  }
 
   // Toggle for demonstration purposes
   const toggleUserType = () => {
@@ -165,55 +184,13 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar userType={userType} />
-      
-      <div className="flex-1 overflow-auto">
-        {/* Top navigation */}
-        <div className="border-b border-border h-[70px] px-6 flex items-center justify-between sticky top-0 bg-background z-10">
-          <TypographyH2 className="text-xl">Dashboard</TypographyH2>
-          
-          <div className="flex items-center gap-4">
-            {/* Toggle user type button - for demo only */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={toggleUserType}
-              className="hidden md:flex"
-            >
-              Switch to {userType === "candidate" ? "Employer" : "Candidate"} View
-            </Button>
-            
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </Button>
-            
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-                {userType === "candidate" ? "JD" : "TC"}
-              </div>
-              <div className="hidden md:block">
-                <TypographyP className="text-sm font-medium">
-                  {userType === "candidate" ? "John Doe" : "TechCorp Inc."}
-                </TypographyP>
-                <TypographyP className="text-xs text-muted-foreground">
-                  {userType === "candidate" ? "Full Stack Developer" : "HR Manager"}
-                </TypographyP>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Dashboard content */}
-        <div className="p-6">
-          {userType === "candidate" ? (
-            <CandidateDashboard />
-          ) : (
-            <EmployerDashboard />
-          )}
-        </div>
-      </div>
+    <div className="p-6">
+      {/* Dashboard content */}
+      {userType === "candidate" ? (
+        <CandidateDashboard />
+      ) : (
+        <EmployerDashboard />
+      )}
     </div>
   );
 }
@@ -225,7 +202,6 @@ const CandidateDashboard = () => {
       {/* Welcome section */}
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-6 md:p-8">
         <div className="max-w-3xl">
-          <PrimaryBadge className="mb-4">Dashboard</PrimaryBadge>
           <TypographyH1 className="text-2xl md:text-3xl mb-2">Welcome back, John! 👋</TypographyH1>
           <TypographyLead className="text-muted-foreground mb-6">
             Your profile has been viewed by 12 recruiters this week. Update your skills to improve your match score.
@@ -245,57 +221,34 @@ const CandidateDashboard = () => {
       
       {/* Stats overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Applications</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">12</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Clipboard className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-green-600 mt-2">3 new this week</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<Clipboard className="h-5 w-5 text-primary" />}
+          label="Applications"
+          value="12"
+          note="3 new this week"
+        />
         
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Interviews</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">3</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-green-600 mt-2">1 scheduled tomorrow</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<Calendar className="h-5 w-5 text-primary" />}
+          label="Interviews"
+          value="3"
+          note="1 scheduled tomorrow"
+        />
         
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Profile Views</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">47</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-green-600 mt-2">+12% from last month</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<Users className="h-5 w-5 text-primary" />}
+          label="Profile Views"
+          value="47"
+          note="+12% from last month"
+        />
         
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Match Score</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">85%</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Star className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-blue-600 mt-2">Above average</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<Star className="h-5 w-5 text-primary" />}
+          label="Match Score"
+          value="85%"
+          note="Above average"
+          noteColor="text-blue-600"
+        />
       </div>
       
       {/* Active applications */}
@@ -310,38 +263,12 @@ const CandidateDashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockApplications.map(app => (
-            <Card key={app.id} className="p-5 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex gap-3 items-center">
-                  <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
-                    {app.logo ? (
-                      <Image src={app.logo} alt={app.company} width={30} height={30} />
-                    ) : (
-                      <Building className="h-5 w-5 text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <TypographyH3 className="font-medium">{app.position}</TypographyH3>
-                    <TypographyP className="text-sm text-muted-foreground">{app.company}</TypographyP>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center mb-3">
-                <StatusBadge status={app.status} />
-                <TypographyP className="text-xs text-muted-foreground">{app.date}</TypographyP>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <MatchScore score={app.matchScore} />
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href={`/applications/${app.id}`}>
-                    Details
-                  </Link>
-                </Button>
-              </div>
-            </Card>
+          {mockApplications.map(application => (
+            <ApplicationCard 
+              key={application.id} 
+              application={application}
+              detailsUrl={`/applications/${application.id}`}
+            />
           ))}
         </div>
       </div>
@@ -359,43 +286,11 @@ const CandidateDashboard = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {mockJobs.map(job => (
-            <Card key={job.id} className="p-5 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex gap-3 items-center">
-                  <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
-                    {job.logo ? (
-                      <Image src={job.logo} alt={job.company} width={30} height={30} />
-                    ) : (
-                      <Building className="h-5 w-5 text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <TypographyH3 className="font-medium">{job.title}</TypographyH3>
-                    <TypographyP className="text-sm text-muted-foreground">{job.company}</TypographyP>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col gap-2 mb-3">
-                <TypographyP className="text-sm flex items-center gap-1">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  {job.location}
-                </TypographyP>
-                <TypographyP className="text-sm flex items-center gap-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  {job.postDate}
-                </TypographyP>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <MatchScore score={job.matchScore} />
-                <Button variant="primary" size="sm" asChild>
-                  <Link href={`/jobs/${job.id}`}>
-                    Apply Now
-                  </Link>
-                </Button>
-              </div>
-            </Card>
+            <JobCard 
+              key={job.id} 
+              job={job}
+              applyUrl={`/jobs/${job.id}`}
+            />
           ))}
         </div>
       </div>
@@ -430,57 +325,34 @@ const EmployerDashboard = () => {
       
       {/* Stats overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Active Jobs</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">24</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Briefcase className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-blue-600 mt-2">3 expiring soon</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<Briefcase className="h-5 w-5 text-primary" />}
+          label="Active Jobs"
+          value="24"
+          note="3 expiring soon"
+          noteColor="text-blue-600"
+        />
         
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Applications</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">57</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Clipboard className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-green-600 mt-2">12 new today</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<Clipboard className="h-5 w-5 text-primary" />}
+          label="Applications"
+          value="57"
+          note="12 new today"
+        />
         
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Interviews</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">15</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-green-600 mt-2">4 scheduled tomorrow</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<Calendar className="h-5 w-5 text-primary" />}
+          label="Interviews"
+          value="15"
+          note="4 scheduled tomorrow"
+        />
         
-        <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <TypographyP className="text-sm text-muted-foreground mb-1">Hired</TypographyP>
-              <TypographyH3 className="text-2xl font-bold">8</TypographyH3>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <TypographyP className="text-xs text-green-600 mt-2">3 this month</TypographyP>
-        </Card>
+        <StatsCard 
+          icon={<CheckCircle className="h-5 w-5 text-primary" />}
+          label="Hired"
+          value="8"
+          note="3 this month"
+        />
       </div>
       
       {/* Top candidates */}
@@ -496,46 +368,11 @@ const EmployerDashboard = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {mockCandidates.map(candidate => (
-            <Card key={candidate.id} className="p-5 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex gap-3 items-start">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
-                    {candidate.avatar ? (
-                      <Image src={candidate.avatar} alt={candidate.name} width={40} height={40} />
-                    ) : (
-                      <User className="h-5 w-5 text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <TypographyH3 className="font-medium">{candidate.name}</TypographyH3>
-                    <TypographyP className="text-sm text-muted-foreground">{candidate.position}</TypographyP>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col gap-2 mb-3">
-                <TypographyP className="text-sm flex items-center gap-1">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  {candidate.experience} experience
-                </TypographyP>
-                <div className="flex flex-wrap gap-1">
-                  {candidate.skills.map((skill, i) => (
-                    <span key={i} className="text-xs bg-muted px-2 py-1 rounded-full">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <MatchScore score={candidate.matchScore} />
-                <Button variant="primary" size="sm" asChild>
-                  <Link href={`/candidates/${candidate.id}`}>
-                    View Profile
-                  </Link>
-                </Button>
-              </div>
-            </Card>
+            <CandidateCard 
+              key={candidate.id} 
+              candidate={candidate}
+              profileUrl={`/candidates/${candidate.id}`}
+            />
           ))}
         </div>
       </div>
@@ -545,61 +382,11 @@ const EmployerDashboard = () => {
         <div className="flex justify-between items-center mb-4">
           <TypographyH2 className="text-xl">Recent Applications</TypographyH2>
           <Button variant="ghost" size="sm" className="gap-1" asChild>
-            <Link href="/manage-applications">
+            <Link href="dashboard/applicants">
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
         </div>
-        
-        {/* <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-4 text-muted-foreground font-medium text-sm">Candidate</th>
-                  <th className="text-left p-4 text-muted-foreground font-medium text-sm">Position</th>
-                  <th className="text-left p-4 text-muted-foreground font-medium text-sm">Match</th>
-                  <th className="text-left p-4 text-muted-foreground font-medium text-sm">Date</th>
-                  <th className="text-left p-4 text-muted-foreground font-medium text-sm">Status</th>
-                  <th className="text-left p-4 text-muted-foreground font-medium text-sm">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockCandidates.map((candidate, index) => (
-                  <tr key={candidate.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
-                          {candidate.avatar ? (
-                            <Image src={candidate.avatar} alt={candidate.name} width={32} height={32} />
-                          ) : (
-                            <User className="h-4 w-4 text-gray-400" />
-                          )}
-                        </div>
-                        <span>{candidate.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-4">{mockJobs[index % mockJobs.length].title}</td>
-                    <td className="p-4">
-                      <MatchScore score={candidate.matchScore} />
-                    </td>
-                    <td className="p-4 text-sm text-muted-foreground">{mockJobs[index % mockJobs.length].postDate}</td>
-                    <td className="p-4">
-                      <StatusBadge status={mockApplications[index % mockApplications.length].status} />
-                    </td>
-                    <td className="p-4">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/manage-applications/${candidate.id}`}>
-                          Review
-                        </Link>
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card> */}
       </div>
     </div>
   );

@@ -35,6 +35,41 @@ export function TypographyH3({ className, ...props }) {
     />
   )
 }
+export function TypographyH4({ className, ...props }) {
+  return (
+    <h4
+      className={cn(
+        "font-serif font-semibold text-foreground text-base",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export function TypographyH5({ className, ...props }) {
+  return (
+    <h5
+      className={cn(
+        "font-serif font-semibold text-foreground text-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export function TypographyH6({ className, ...props }) {
+  return (
+    <h6
+      className={cn(
+        "font-serif font-semibold text-foreground text-xs",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
 export function TypographyP({ className, ...props }) {
   return (
@@ -65,6 +100,30 @@ export function TypographySmall({ className, ...props }) {
     <small
       className={cn(
         "text-sm text-foreground/80",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export function TypographyMuted({ className, ...props }) {
+  return (
+    <p
+      className={cn(
+        "text-sm text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export function TypographyLabel({ className, ...props }) {
+  return (
+    <label
+      className={cn(
+        "block text-sm font-medium text-foreground mb-1",
         className
       )}
       {...props}

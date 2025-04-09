@@ -2,20 +2,107 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/base/logo";
-import { Menu, X } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { Menu, X, BriefcaseIcon, CalendarClock, PlusCircle } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { TypographyH2, TypographyP } from "@/components/ui/typography";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Bell } from "lucide-react";
+import { usePathname } from "next/navigation";
 
-const Header = () => {
+const AuthHeader = ({ userProfile }) => {
+  const { user: authUser } = useAuth();
+  const pathname = usePathname();
+  const activePage = pathname.split("/").pop();
+  
+  // Get the current page title based on the pathname
+  const pageTitles = {
+    dashboard: "Dashboard",
+    jobs: "Find Jobs",
+    applications: "My Applications",
+    applicants: "Applicants",
+    profile: "Profile"
+  };
+  
+  // Render page-specific action buttons based on the current path
+  const renderActionButton = () => {
+    switch (activePage) {
+      case "jobs":
+        return (
+          <Button asChild>
+            <Link href="/dashboard/applications">
+              <CalendarClock className="h-4 w-4 mr-2" />
+              My Applications
+            </Link>
+          </Button>
+        );
+      case "applications":
+        return (
+          <Button asChild>
+            <Link href="/dashboard/jobs">
+              <BriefcaseIcon className="h-4 w-4 mr-2" />
+              Browse Jobs
+            </Link>
+          </Button>
+        );
+      case "applicants":
+        return (
+          <Button>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add Applicant
+          </Button>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="border-b border-border h-[70px] px-6 flex items-center justify-between sticky top-0 bg-background z-10">
+      <TypographyH2 className="text-xl">{pageTitles[activePage]}</TypographyH2>
+      
+      <div className="flex items-center gap-4">
+        {/* Page-specific action button */}
+        {renderActionButton()}
+        
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        </Button>
+        
+        <div className="flex items-center gap-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={userProfile?.avatar_url || authUser?.user_metadata?.avatar_url} alt={userProfile?.full_name || authUser?.user_metadata?.full_name} />
+            <AvatarFallback>
+              {userProfile?.full_name ? userProfile.full_name.charAt(0).toUpperCase() : authUser?.email ? authUser.email.charAt(0).toUpperCase() : 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="hidden md:block">
+            <TypographyP className="text-sm font-medium">
+              {userProfile?.full_name || authUser?.user_metadata?.full_name || authUser?.email || 'User'}
+            </TypographyP>
+            {(userProfile?.job_title || authUser?.user_metadata?.user_name) && (
+              <TypographyP className="text-xs text-muted-foreground">
+                {userProfile?.job_title || authUser?.user_metadata?.user_name}
+              </TypographyP>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+const UnauthHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, signOut } = useAuth();
-  const router = useRouter();
+  const { isAuthenticated, supabase } = useAuth();
   
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (!error) {
-      router.push('/');
-    }
+    // Sign out using the global Supabase client
+    await supabase.auth.signOut();
+    
+    // Force a page refresh to ensure a clean state
+    window.location.href = "/";
   };
   
   return (
@@ -49,10 +136,10 @@ const Header = () => {
           ) : (
             <>
               <Button variant="link" className="text-foreground/70 hover:text-foreground" asChild>
-                <Link href="/auth/signin">Log in</Link>
+                <Link href="/signin">Log in</Link>
               </Button>
               <Button className="shadow-primary rounded-xl px-6" asChild>
-                <Link href="/auth/signup">Get Started</Link>
+                <Link href="/signup">Get Started</Link>
               </Button>
             </>
           )}
@@ -135,14 +222,14 @@ const Header = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   asChild
                 >
-                  <Link href="/auth/signin">Log in</Link>
+                  <Link href="/signin">Log in</Link>
                 </Button>
                 <Button 
                   className="w-full shadow-primary rounded-xl"
                   onClick={() => setMobileMenuOpen(false)}
                   asChild
                 >
-                  <Link href="/auth/signup">Get Started</Link>
+                  <Link href="/signup">Get Started</Link>
                 </Button>
               </>
             )}
@@ -153,4 +240,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export { UnauthHeader, AuthHeader }; 

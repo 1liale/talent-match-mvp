@@ -7,55 +7,82 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { login, signup, signInWithOAuth } from "@/utils/supabase/auth-actions";
-import { UserTypeSwitcher } from "@/components/auth/user-type-switcher";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+// Define validation schema with zod
+const authSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters")
+});
 
 export const AuthForm = ({ mode = "signin" }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("applicant"); // Default to applicant
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null); // Will be { text: string, type: "error"|"success" } or null
   const [isLogin, setIsLogin] = useState(mode === "signin");
   const router = useRouter();
+
+  // Set up form with react-hook-form and zod validation
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors },
+    reset
+  } = useForm({
+    resolver: zodResolver(authSchema),
+    defaultValues: {
+      email: "",
+      password: ""
+    }
+  });
 
   // Update isLogin state when mode prop changes
   useEffect(() => {
     setIsLogin(mode === "signin");
-  }, [mode]);
+    reset();
+  }, [mode, reset]);
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setLoading(true);
-    setMessage("");
+    setMessage(null);
     
     // Create FormData object
     const formData = new FormData();
-    formData.append('email', email);
-    formData.append('password', password);
-    
-    if (!isLogin) {
-      formData.append('user_type', userType);
-    }
+    formData.append('email', data.email);
+    formData.append('password', data.password);
     
     try {
       if (isLogin) {
         // Sign in using server action
         const result = await login(formData);
         if (result?.error) {
-          setMessage(result.error);
+          setMessage({
+            text: result.error.message || "Invalid email or password",
+            type: "error"
+          });
         }
       } else {
         // Sign up using server action
         const result = await signup(formData);
         if (result?.error) {
-          setMessage(result.error);
+          setMessage({
+            text: result.error.message || "Failed to create account",
+            type: "error"
+          });
         } else if (result?.message) {
-          setMessage(result.message);
+          setMessage({
+            text: result.message,
+            type: "success"
+          });
         }
       }
     } catch (error) {
-      setMessage(error.message || "An unexpected error occurred");
+      setMessage({
+        text: error.message || "An unexpected error occurred",
+        type: "error"
+      });
     } finally {
       setLoading(false);
     }
@@ -63,7 +90,7 @@ export const AuthForm = ({ mode = "signin" }) => {
 
   const handleOAuthSignIn = async (provider) => {
     setLoading(true);
-    setMessage("");
+    setMessage(null);
     
     try {
       // Call signInWithOAuth directly with the provider string
@@ -74,19 +101,21 @@ export const AuthForm = ({ mode = "signin" }) => {
       }
     } catch (error) {
       console.error("OAuth error:", error);
-      setMessage(error.message || "An unexpected error occurred");
+      setMessage({
+        text: error.message || "An unexpected error occurred",
+        type: "error"
+      });
       setLoading(false);
     }
   };
 
   const toggleMode = () => {
     const newMode = isLogin ? "signup" : "signin";
-    router.push(`/auth/${newMode}`);
+    router.push(`/${newMode}`);
   };
 
   return (
     <>
-      {!isLogin && <UserTypeSwitcher userType={userType} setUserType={setUserType} />}
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle>{isLogin ? "Sign In" : "Sign Up"}</CardTitle>
@@ -141,29 +170,39 @@ export const AuthForm = ({ mode = "signin" }) => {
             </div>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                {...register("email")}
+                className={errors.email ? "border-red-500" : ""}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                {...register("password")}
+                className={errors.password ? "border-red-500" : ""}
               />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+              )}
             </div>
-            {message && <p className="text-sm text-red-500">{message}</p>}
+            {message && (
+              <p 
+                className={`text-sm mt-1 ${message.type === "success" ? "text-green-500" : "text-red-500"}`}
+              >
+                {message.text}
+              </p>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>

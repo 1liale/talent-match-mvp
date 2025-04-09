@@ -8,8 +8,6 @@ import { createClient } from '@/utils/supabase/server'
 export async function login(formData) {
   const supabase = await createClient()
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
   const data = {
     email: formData.get('email'),
     password: formData.get('password'),
@@ -18,7 +16,7 @@ export async function login(formData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/error')
+    return { error }
   }
 
   revalidatePath('/', 'layout')
@@ -28,21 +26,55 @@ export async function login(formData) {
 export async function signup(formData) {
   const supabase = await createClient()
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
+  const signUpData = {
     email: formData.get('email'),
     password: formData.get('password'),
   }
 
-  const { error } = await supabase.auth.signUp(data)
-
+  // Try to sign up the user - Supabase auth.signUp will tell us if user already exists
+  const { data , error } = await supabase.auth.signUp(signUpData)
+  
   if (error) {
-    redirect('/error')
+    return error
   }
 
+  // User email already exists
+  if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+    return { error: { message: "This email is already registered. Please log in instead." } }
+  }
+
+  return { message: "Signup successful, confirmation email sent." }
+}
+
+export async function resetPassword(formData) {
+  const supabase = await createClient()
+  
+  const email = formData.get('email')
+  
+  const { error } = await supabase.auth.resetPasswordForEmail(email)
+  
+  if (error) {
+    return { error }
+  }
+  
+  return { success: true }
+}
+
+export async function updatePassword(formData) {
+  const supabase = await createClient()
+  
+  const password = formData.get('password')
+  
+  const { error } = await supabase.auth.updateUser({
+    password,
+  })
+  
+  if (error) {
+    return { error }
+  }
+  
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect('/dashboard')
 }
 
 export async function signInWithOAuth(provider) {
@@ -51,7 +83,7 @@ export async function signInWithOAuth(provider) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/callback`,
     },
   })
 

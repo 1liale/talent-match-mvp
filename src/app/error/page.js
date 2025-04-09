@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
+import { TypographyP } from "@/components/ui/typography"
 
-export default function Error({ error, reset }) {
+export default function Error({ error }) {
   const router = useRouter()
 
   return (
@@ -18,14 +19,12 @@ export default function Error({ error, reset }) {
           <CardTitle className="text-center text-2xl">Something Went Wrong</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground">
-            {error?.message || "We encountered an unexpected error. Please try again or return to the home page."}
-          </p>
+          <TypographyP className="text-center text-muted-foreground">
+            {error?.message || "We encountered an unexpected error or the page you are looking for does not exist."}
+          </TypographyP>
+
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
-          {/* <Button onClick={() => reset()} className="w-full" variant="default">
-            Try Again
-          </Button> */}
           <Button onClick={() => router.push('/')} className="w-full" variant="default">
             Return Home
           </Button>

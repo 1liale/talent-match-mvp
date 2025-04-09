@@ -1,5 +1,7 @@
 import { Nunito, PT_Serif } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/auth-context";
+import { Toaster } from "sonner";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -24,7 +26,10 @@ const RootLayout = ({ children }) => {
         className={`${nunito.variable} ${ptSerif.variable} antialiased relative`}
       >
         <div className="texture" />
-        {children}
+        <AuthProvider>
+          {children}
+          <Toaster position="top-center" />
+        </AuthProvider>
       </body>
     </html>
   );
