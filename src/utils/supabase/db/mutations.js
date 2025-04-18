@@ -101,38 +101,18 @@ export async function uploadAvatar(userId, file) {
 
     // Create Supabase client
     const supabase = createClient();
-    
     const BUCKET_NAME = 'profile-imgs';
-    
-    // Check if bucket exists, create it if it doesn't
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === BUCKET_NAME);
-    
-    if (!bucketExists) {
-      const { error: createBucketError } = await supabase.storage.createBucket(BUCKET_NAME, {
-        public: true,
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'],
-        fileSizeLimit: 1024 * 1024 * 2, // 2MB
-      });
-      
-      if (createBucketError) {
-        console.error('Error creating bucket:', createBucketError);
-        throw createBucketError;
-      }
-    }
-    
-    // Generate a unique file name
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `${fileName}`;
-
+    const fileName = file.name;
+  
     // Upload the file to the 'profile-imgs' bucket
     const { data, error } = await supabase.storage
       .from(BUCKET_NAME)
-      .upload(filePath, file, {
+      .upload(fileName, file, {
         upsert: true,
-        contentType: file.type,
+        cacheControl: '3600'
       });
+
+    console.log('Upload response:', data, error);
 
     if (error) {
       console.error('Storage upload error:', error);
@@ -142,7 +122,7 @@ export async function uploadAvatar(userId, file) {
     // Get public URL
     const { data: urlData } = supabase.storage
       .from(BUCKET_NAME)
-      .getPublicUrl(filePath);
+      .getPublicUrl(fileName);
       
     if (!urlData || !urlData.publicUrl) {
       throw new Error('Failed to get public URL for uploaded file');

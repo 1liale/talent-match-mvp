@@ -1,41 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Sidebar from "@/components/nav/sidebar";
 import { AuthHeader } from "@/components/nav/header";
+import { ProfileProvider } from "@/context/profile-context";
 import { useAuth } from "@/context/auth-context";
-import { getUserProfile } from "@/utils/supabase/db/queries";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
-  const { user } = useAuth();
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    async function loadUserProfile() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const profileData = await getUserProfile();
-        setUserProfile(profileData || { user_type: "candidate" });
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-        // Set a default profile in case of error
-        setUserProfile({ user_type: "candidate" });
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    loadUserProfile();
-  }, [user]);
-
-  // Show a loading spinner while profile is being fetched
-  if (loading) {
+  // Show a loading spinner while auth is being checked
+  if (authLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -45,10 +20,29 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
+    <ProfileProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </ProfileProvider>
+  );
+}
+
+// Separate component to access profile context
+function DashboardContent({ children }) {
+  const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <span className="text-sm">Please log in to access the dashboard</span>
+      </div>
+    );
+  }
+
+  return (
     <div className="flex h-screen bg-background">
-      {userProfile && <Sidebar userProfile={userProfile} />}
+      <Sidebar />
       <div className="flex-1 overflow-auto">
-        <AuthHeader userProfile={userProfile} />
+        <AuthHeader />
         {children}
       </div>
     </div>

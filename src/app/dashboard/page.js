@@ -14,10 +14,10 @@ import {
   JobCard,
   CandidateCard,
 } from "@/components/base/card";
-import { PrimaryBadge } from "@/components/base/badge";
 import { ChevronRight, Users, Briefcase, Star, Calendar, CheckCircle, Plus, Clipboard, Search } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { createClient } from "@/utils/supabase/client";
+import { CandidateBanner, EmployerBanner } from "@/components/dashboard/banner";
 
 // Mock data
 const mockApplications = [
@@ -118,7 +118,6 @@ const mockCandidates = [
 
 // Dashboard component
 export default function DashboardPage() {
-  // In a real app, this would come from authentication state
   const [userType, setUserType] = useState("candidate");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -178,46 +177,23 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Toggle for demonstration purposes
-  const toggleUserType = () => {
-    setUserType(userType === "candidate" ? "employer" : "candidate");
-  };
-
   return (
     <div className="p-6">
-      {/* Dashboard content */}
       {userType === "candidate" ? (
-        <CandidateDashboard />
+        <CandidateDashboard user={user} />
       ) : (
-        <EmployerDashboard />
+        <EmployerDashboard user={user} />
       )}
     </div>
   );
 }
 
 // Candidate Dashboard
-const CandidateDashboard = () => {
+const CandidateDashboard = ({ user }) => {
   return (
     <div className="space-y-8">
       {/* Welcome section */}
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-6 md:p-8">
-        <div className="max-w-3xl">
-          <TypographyH1 className="text-2xl md:text-3xl mb-2">Welcome back, John! 👋</TypographyH1>
-          <TypographyLead className="text-muted-foreground mb-6">
-            Your profile has been viewed by 12 recruiters this week. Update your skills to improve your match score.
-          </TypographyLead>
-          <div className="flex flex-wrap gap-3">
-            <Button className="gap-2">
-              <CheckCircle className="h-4 w-4" />
-              Complete Profile
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Search className="h-4 w-4" />
-              Browse Jobs
-            </Button>
-          </div>
-        </div>
-      </div>
+      <CandidateBanner user={user} />
       
       {/* Stats overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -299,29 +275,11 @@ const CandidateDashboard = () => {
 };
 
 // Employer Dashboard
-const EmployerDashboard = () => {
+const EmployerDashboard = ({ user }) => {
   return (
     <div className="space-y-8">
       {/* Welcome section */}
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-6 md:p-8">
-        <div className="max-w-3xl">
-          <PrimaryBadge className="mb-4">Dashboard</PrimaryBadge>
-          <TypographyH1 className="text-2xl md:text-3xl mb-2">Welcome back, TechCorp! 👋</TypographyH1>
-          <TypographyLead className="text-muted-foreground mb-6">
-            You have 24 active job postings and 57 new applications this week. Review them to find your perfect match.
-          </TypographyLead>
-          <div className="flex flex-wrap gap-3">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Post New Job
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Search className="h-4 w-4" />
-              Search Talent
-            </Button>
-          </div>
-        </div>
-      </div>
+      <EmployerBanner user={user} />
       
       {/* Stats overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

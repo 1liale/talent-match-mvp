@@ -1,16 +1,20 @@
+"use client"
+
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/base/logo";
 import { Menu, X, BriefcaseIcon, CalendarClock, PlusCircle } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { useProfile } from "@/context/profile-context";
 import { TypographyH2, TypographyP } from "@/components/ui/typography";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Bell } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-const AuthHeader = ({ userProfile }) => {
+const AuthHeader = () => {
   const { user: authUser } = useAuth();
+  const { profile } = useProfile();
   const pathname = usePathname();
   const activePage = pathname.split("/").pop();
   
@@ -56,6 +60,10 @@ const AuthHeader = ({ userProfile }) => {
     }
   };
 
+  if (!profile) {
+    return null; // Don't render until profile is loaded
+  }
+
   return (
     <div className="border-b border-border h-[70px] px-6 flex items-center justify-between sticky top-0 bg-background z-10">
       <TypographyH2 className="text-xl">{pageTitles[activePage]}</TypographyH2>
@@ -64,27 +72,22 @@ const AuthHeader = ({ userProfile }) => {
         {/* Page-specific action button */}
         {renderActionButton()}
         
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </Button>
-        
         <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={userProfile?.avatar_url || authUser?.user_metadata?.avatar_url} alt={userProfile?.full_name || authUser?.user_metadata?.full_name} />
-            <AvatarFallback>
-              {userProfile?.full_name ? userProfile.full_name.charAt(0).toUpperCase() : authUser?.email ? authUser.email.charAt(0).toUpperCase() : 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <Link href="/dashboard/profile">
+            <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity">
+              <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || authUser?.user_metadata?.full_name} />
+              <AvatarFallback className="bg-primary/10">
+              {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : "U"}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
           <div className="hidden md:block">
             <TypographyP className="text-sm font-medium">
-              {userProfile?.full_name || authUser?.user_metadata?.full_name || authUser?.email || 'User'}
+              {profile?.username}
             </TypographyP>
-            {(userProfile?.job_title || authUser?.user_metadata?.user_name) && (
-              <TypographyP className="text-xs text-muted-foreground">
-                {userProfile?.job_title || authUser?.user_metadata?.user_name}
-              </TypographyP>
-            )}
+            <TypographyP className="text-xs text-muted-foreground">
+              {profile?.job_title}
+            </TypographyP>
           </div>
         </div>
       </div>

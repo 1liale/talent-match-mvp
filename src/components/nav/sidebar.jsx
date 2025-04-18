@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/base/logo";
 import { useAuth } from "@/context/auth-context";
+import { useProfile } from "@/context/profile-context";
 
 // Menu item configuration
 const candidateMenuItems = [
@@ -55,8 +56,9 @@ const isMenuItemActive = (pathname, itemUrl) => {
   return false;
 };
 
-const Sidebar = ({ userProfile }) => {
+const Sidebar = () => {
   const { supabase } = useAuth();
+  const { profile } = useProfile();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(() => {
@@ -73,12 +75,12 @@ const Sidebar = ({ userProfile }) => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return null; // Return null on server-side and initial render
+  if (!mounted || !profile) {
+    return null; // Return null on server-side and initial render or if profile isn't loaded
   }
 
-  // Determine user type from userProfile with null check
-  const userType = userProfile.user_type;
+  // Determine user type from profile
+  const userType = profile.user_type;
   const menuItems = userType === "recruiter" ? employerMenuItems : candidateMenuItems;
 
   const handleSetIsOpen = (value) => {
