@@ -1,6 +1,6 @@
 import { OpenAI } from 'openai';
 import { createClient } from '@/utils/supabase/server';
-import { generateResumeEmbedding } from '@/utils/ai/embeddings';
+import { generateResumeEmbedding } from '@/utils/cohere/embeddings';
 
 // Initialize OpenAI client
 const openai = new OpenAI({

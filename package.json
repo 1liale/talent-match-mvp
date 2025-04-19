@@ -2,6 +2,7 @@
   "name": "talent-match-mvp",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -19,6 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cohere-ai": "^7.16.0",
+    "dotenv": "^16.5.0",
     "lucide-react": "^0.486.0",
     "next": "15.2.4",
     "openai": "^4.93.0",

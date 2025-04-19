@@ -1,7 +1,25 @@
+/**
+ * export-supabase.js
+ *
+ * This script loads job postings and applicant profiles from local JSON files,
+ * generates text embeddings for each using the Cohere API, and inserts the
+ * enriched records into the Supabase 'jobs' and 'applicants' tables.
+ *
+ * Prerequisites:
+ *   - Ensure the following environment variables are set:
+ *       NEXT_PUBLIC_SUPABASE_URL       Supabase project URL
+ *       NEXT_PUBLIC_SUPABASE_ANON_KEY  Supabase anon key
+ *       COHERE_API_KEY                 Cohere API key for embeddings
+ *
+ * Usage: (call from the root of the project)
+ *   node scripts/export-supabase.js
+ */
+
 import { createClient } from '@supabase/supabase-js';
-import { generateJobEmbedding, generateApplicantEmbedding } from '../src/utils/ai/embeddings.js';
-import jobs from './data/jobs.json';
-import applicants from './data/applicants.json';
+import { generateJobEmbedding, generateApplicantEmbedding } from '../src/utils/cohere/embeddings.js';
+import jobs from './data/jobs.json' assert { type: 'json' };
+import applicants from './data/applicants.json' assert { type: 'json' };
+import 'dotenv/config';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -9,13 +27,16 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-async function importJobs() {
-  console.log('Importing jobs...');
+console.log(process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+async function ExportJobs() {
+  console.log('Exporting jobs...');
   
   for (const job of jobs) {
     try {
       // Generate embedding for job
       const embedding = await generateJobEmbedding(job);
+      console.log(`Embedding generated for job: ${job.title} (${embedding.length} dimensions)`);
       
       // Convert post_date string to Date
       const postDate = new Date(job.postDate);
@@ -38,9 +59,9 @@ async function importJobs() {
         });
       
       if (error) {
-        console.error(`Error importing job ${job.title}:`, error);
+        console.error(`Error inserting job ${job.title}:`, error);
       } else {
-        console.log(`Imported job: ${job.title}`);
+        console.log(`Exported job: ${job.title}`);
       }
     } catch (error) {
       console.error(`Error processing job ${job.title}:`, error);
@@ -48,13 +69,14 @@ async function importJobs() {
   }
 }
 
-async function importApplicants() {
-  console.log('Importing applicants...');
+async function ExportApplicants() {
+  console.log('Exporting applicants...');
   
   for (const applicant of applicants) {
     try {
       // Generate embedding for applicant
       const embedding = await generateApplicantEmbedding(applicant);
+      console.log(`Embedding generated for applicant: ${applicant.fullName} (${embedding.length} dimensions)`);
       
       // Insert applicant with embedding
       const { error } = await supabase
@@ -83,11 +105,11 @@ async function importApplicants() {
           updated_at: new Date(applicant.updatedAt),
           embedding
         });
-      
+
       if (error) {
-        console.error(`Error importing applicant ${applicant.fullName}:`, error);
+        console.error(`Error inserting applicant ${applicant.fullName}:`, error);
       } else {
-        console.log(`Imported applicant: ${applicant.fullName}`);
+        console.log(`Exported applicant: ${applicant.fullName}`);
       }
     } catch (error) {
       console.error(`Error processing applicant ${applicant.fullName}:`, error);
@@ -95,15 +117,15 @@ async function importApplicants() {
   }
 }
 
-// Run imports
+// Run Exports
 async function main() {
   try {
-    await importJobs();
-    await importApplicants();
-    console.log('Import completed successfully');
+    await ExportJobs();
+    await ExportApplicants();
+    console.log('Export completed successfully');
   } catch (error) {
-    console.error('Import failed:', error);
+    console.error('Export failed:', error);
   }
 }
 
-main(); 
+main();

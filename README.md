@@ -42,7 +42,7 @@ An AI-powered talent matching platform that efficiently connects hiring managers
    ```
 
 3. Set up environment variables
-   Create a `.env.local` file in the root directory with the following variables:
+   Create a `.env` file in the root directory with the following variables:
    ```
    NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
