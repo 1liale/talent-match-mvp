@@ -3,9 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Star, Briefcase, Clock, User } from "lucide-react";
-import { TypographyH3, TypographyP } from "@/components/ui/typography";
+import { Building, Star, Briefcase, Clock, User, FileText, Trash2, Download, CheckCircle, AlertTriangle } from "lucide-react";
+import { TypographyH3, TypographyP, TypographySmall } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 // Primary Cards
 const PrimaryCardLarge = ({ icon, title, description, className, ...props }) => {
@@ -280,6 +281,100 @@ const CandidateCard = ({
   );
 };
 
+/**
+ * Resume card component for displaying uploaded resume files
+ */
+const ResumeCard = ({ resume, onDelete, onReview, isReviewing }) => {
+  const fileTypeIcon = resume.file_type === 'pdf' ? (
+    <FileText className="h-6 w-6 text-red-500" />
+  ) : (
+    <FileText className="h-6 w-6 text-blue-500" />
+  );
+  
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const hasBeenReviewed = resume.feedback !== null;
+  
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-gray-100 rounded-md">
+            {fileTypeIcon}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <TypographyH3 className="text-base font-medium truncate" title={resume.file_name}>
+              {resume.file_name}
+            </TypographyH3>
+            <div className="flex items-center gap-2 mt-1">
+              <TypographySmall className="text-muted-foreground">
+                Uploaded {formatDate(resume.uploaded_at)}
+              </TypographySmall>
+              <span className="text-muted-foreground">•</span>
+              <TypographySmall className="text-muted-foreground">
+                {(resume.file_size / 1000).toFixed(0)} KB
+              </TypographySmall>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => window.open(resume.file_url, '_blank')}
+              title="Download"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="text-destructive hover:text-destructive" 
+              onClick={() => onDelete(resume.id)}
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="mt-4 flex justify-between items-center">
+          <div>
+            {hasBeenReviewed ? (
+              <Badge variant="secondary" className="gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Reviewed
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                Not Reviewed
+              </Badge>
+            )}
+          </div>
+          
+          <Button 
+            size="sm"
+            variant={hasBeenReviewed ? "outline" : "default"}
+            onClick={() => onReview(resume)}
+            disabled={isReviewing}
+          >
+            {isReviewing ? 'Analyzing...' : (hasBeenReviewed ? 'View Feedback' : 'Get AI Feedback')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 export { 
   PrimaryCardLarge, 
   PrimaryCardMedium, 
@@ -289,5 +384,6 @@ export {
   JobCard,
   CandidateCard,
   StatusBadge,
-  MatchScore
+  MatchScore,
+  ResumeCard
 }; 

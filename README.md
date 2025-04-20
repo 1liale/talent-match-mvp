@@ -20,6 +20,16 @@ An AI-powered talent matching platform that efficiently connects hiring managers
 - **Backend:** Supabase (Authentication, Database, Storage)
 - **AI:** Cohere API
 
+## Resume Analysis Features
+
+The platform supports uploading and AI analysis of resumes in PDF and DOCX formats:
+
+- PDF processing uses Unstructured.io for accurate text extraction that preserves layout and formatting
+- DOCX processing uses Mammoth.js for reliable text extraction
+- AI analysis powered by Cohere's Command-R-Plus model
+- Analysis includes skill extraction, experience identification, education details, strengths and improvement areas
+- Each resume receives an overall score on a scale of 0-10
+
 ## Getting Started
 
 ### Prerequisites
@@ -73,3 +83,10 @@ The application can be deployed using Vercel or any other platform that supports
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Database Schema
+
+The project uses Supabase with the following main tables:
+
+- `user_profiles`: Stores user information
+- `resumes`: Stores resume metadata and feedback

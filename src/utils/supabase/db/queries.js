@@ -68,4 +68,37 @@ export async function hasCompletedOnboarding() {
     console.error('Error checking onboarding status:', error);
     throw error;
   }
+}
+
+/**
+ * Get all resumes for a user
+ * @param {string} userId - The user ID
+ * @returns {Promise<Array>} List of user's resumes
+ */
+export async function getUserResumes(userId) {
+  try {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    
+    // Create Supabase client
+    const supabase = createClient();
+    
+    // Get user's resumes
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('uploaded_at', { ascending: false });
+      
+    if (error) {
+      console.error('Database error:', error);
+      throw new Error('Failed to fetch resumes');
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching user resumes:', error);
+    throw error;
+  }
 } 

@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import Sidebar from "@/components/nav/sidebar";
 import { AuthHeader } from "@/components/nav/header";

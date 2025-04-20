@@ -19,9 +19,11 @@
     "ai": "^4.3.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "cohere-ai": "^7.16.0",
+    "cohere-ai": "^7.17.1",
     "dotenv": "^16.5.0",
+    "fs": "^0.0.1-security",
     "lucide-react": "^0.486.0",
+    "mammoth": "^1.9.0",
     "next": "15.2.4",
     "openai": "^4.93.0",
     "pgvector": "^0.2.0",
@@ -32,6 +34,7 @@
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.1.0",
     "tw-animate-css": "^1.2.5",
+    "unstructured-client": "^0.24.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {

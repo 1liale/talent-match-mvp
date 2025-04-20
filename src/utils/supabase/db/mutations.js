@@ -146,4 +146,174 @@ export async function uploadAvatar(userId, file) {
     console.error('Error uploading avatar:', error);
     throw error;
   }
+}
+
+/**
+ * Upload a resume file to Supabase storage and save metadata to database
+ * @param {string} userId - The user ID
+ * @param {File} file - The resume file to upload
+ * @returns {Promise<Object>} The saved resume data
+ */
+export async function uploadResume(userId, file) {
+  try {
+    if (!userId || !file) {
+      throw new Error('User ID and file are required');
+    }
+
+    // Create Supabase client
+    const supabase = createClient();
+    
+    // Upload file to Supabase storage
+    const fileName = `${Date.now()}_${file.name}`;
+    const filePath = `${userId}/${fileName}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('resumes')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (uploadError) throw uploadError;
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('resumes')
+      .getPublicUrl(filePath);
+      
+    // Determine file type
+    const fileType = file.name.split('.').pop().toLowerCase();
+    
+    // Insert record into resumes table
+    const { data, error: insertError } = await supabase
+      .from('resumes')
+      .insert([
+        {
+          user_id: userId,
+          file_name: file.name,
+          file_url: urlData.publicUrl,
+          file_type: fileType,
+          file_size: file.size,
+          uploaded_at: new Date().toISOString()
+        }
+      ])
+      .select();
+      
+    if (insertError) throw insertError;
+    
+    return data[0];
+  } catch (error) {
+    console.error('Error uploading resume:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a resume from storage and database
+ * @param {string} userId - The user ID
+ * @param {string} resumeId - The resume ID to delete
+ * @param {string} fileUrl - The file URL to delete from storage
+ * @returns {Promise<void>}
+ */
+export async function deleteResume(userId, resumeId, fileUrl) {
+  try {
+    if (!userId || !resumeId || !fileUrl) {
+      throw new Error('User ID, resume ID, and file URL are required');
+    }
+
+    // Create Supabase client
+    const supabase = createClient();
+    
+    // Extract the path from URL
+    const urlParts = fileUrl.split('/');
+    const storagePath = `${userId}/${urlParts[urlParts.length - 1]}`;
+    
+    // Delete from storage
+    const { error: storageError } = await supabase.storage
+      .from('resumes')
+      .remove([storagePath]);
+    
+    if (storageError) throw storageError;
+    
+    // Delete from database
+    const { error: dbError } = await supabase
+      .from('resumes')
+      .delete()
+      .eq('id', resumeId);
+      
+    if (dbError) throw dbError;
+  } catch (error) {
+    console.error('Error deleting resume:', error);
+    throw error;
+  }
+}
+
+/**
+ * Save AI feedback for a resume
+ * @param {string} resumeId - The resume ID
+ * @param {Object} feedback - The feedback data to save
+ * @returns {Promise<Object>} Updated resume data
+ */
+export async function saveResumeFeedback(resumeId, feedback) {
+  try {
+    if (!resumeId || !feedback) {
+      throw new Error('Resume ID and feedback are required');
+    }
+
+    // Create Supabase client
+    const supabase = createClient();
+    
+    // Update resume with feedback
+    const { data, error } = await supabase
+      .from('resumes')
+      .update({ 
+        feedback: feedback,
+        feedback_updated_at: new Date().toISOString()
+      })
+      .eq('id', resumeId)
+      .select();
+      
+    if (error) throw error;
+    
+    return data[0];
+  } catch (error) {
+    console.error('Error saving resume feedback:', error);
+    throw error;
+  }
+}
+
+/**
+ * Process a resume file with AI analysis
+ * @param {string} resumeId - The resume ID
+ * @param {File} file - The resume file to process
+ * @returns {Promise<Object>} The feedback data
+ */
+export async function processResumeWithAI(resumeId, file) {
+  try {
+    if (!resumeId || !file) {
+      throw new Error('Resume ID and file are required');
+    }
+
+    // Create form data for the API request
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('resumeId', resumeId);
+    
+    // Send to our API route for processing
+    const response = await fetch('/api/process-resume', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to process resume');
+    }
+    
+    const data = await response.json();
+    return data.feedback;
+  } catch (error) {
+    console.error('Error processing resume with AI:', error);
+    throw error;
+  }
 } 
