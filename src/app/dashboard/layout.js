@@ -3,8 +3,12 @@
 import Sidebar from "@/components/nav/sidebar";
 import { AuthHeader } from "@/components/nav/header";
 import { ProfileProvider } from "@/context/profile-context";
+import { JobApplicationProvider } from "@/context/job-application-context";
 import { useAuth } from "@/context/auth-context";
 import { Loader2 } from "lucide-react";
+import { JobApplicationModal } from "@/components/jobs/application-modal";
+import { useJobApplication } from "@/context/job-application-context";
+import { calculateTimeAgo } from "@/utils/date";
 
 export default function DashboardLayout({ children }) {
   const { loading: authLoading } = useAuth();
@@ -21,14 +25,17 @@ export default function DashboardLayout({ children }) {
 
   return (
     <ProfileProvider>
-      <DashboardContent>{children}</DashboardContent>
+      <JobApplicationProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </JobApplicationProvider>
     </ProfileProvider>
   );
 }
 
-// Separate component to access profile context
+// Separate component to access profile context and job application context
 function DashboardContent({ children }) {
   const { user } = useAuth();
+  const { isApplicationModalOpen, setIsApplicationModalOpen, selectedJob, resumes } = useJobApplication();
 
   if (!user) {
     return (
@@ -44,6 +51,27 @@ function DashboardContent({ children }) {
       <div className="flex-1 overflow-auto">
         <AuthHeader />
         {children}
+        
+        {/* Job Application Modal */}
+        {selectedJob && (
+          <JobApplicationModal
+            job={{
+              id: selectedJob.id,
+              title: selectedJob.title,
+              company: selectedJob.company,
+              location: selectedJob.location,
+              salary: selectedJob.salary,
+              postDate: calculateTimeAgo(selectedJob.post_date),
+              type: selectedJob.employment_type,
+              experience: selectedJob.experience_level,
+              description: selectedJob.description
+            }}
+            open={isApplicationModalOpen}
+            onOpenChange={setIsApplicationModalOpen}
+            resumes={resumes}
+            userId={user?.id}
+          />
+        )}
       </div>
     </div>
   );

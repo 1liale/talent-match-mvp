@@ -105,7 +105,6 @@ export default function ResumesPage() {
   
   // Get AI review for resume
   const handleReviewResume = async (resume) => {
-    console.log("Handle Review Resume:", resume);
     setSelectedResume(resume);
     
     if (resume.feedback) {
@@ -124,8 +123,6 @@ export default function ResumesPage() {
       
       // Process the resume with AI
       const feedbackData = await processResumeWithAI(resume.id, file);
-
-      console.log("FEEDBACK DATA", feedbackData);
       
       // Update local state
       setFeedback(feedbackData);

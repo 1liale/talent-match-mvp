@@ -21,7 +21,7 @@ const AuthHeader = () => {
   // Get the current page title based on the pathname
   const pageTitles = {
     dashboard: "Dashboard",
-    jobs: "Find Jobs",
+    jobs: "Find The Ideal Role For You",
     applications: "My Applications",
     applicants: "Applicants",
     profile: "Profile"

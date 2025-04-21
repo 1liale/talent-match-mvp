@@ -232,7 +232,7 @@ const CandidateDashboard = ({ user }) => {
         <div className="flex justify-between items-center mb-4">
           <TypographyH2 className="text-xl">My Applications</TypographyH2>
           <Button variant="ghost" size="sm" className="gap-1" asChild>
-            <Link href="/applications">
+            <Link href="/dashboard/applications">
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -254,7 +254,7 @@ const CandidateDashboard = ({ user }) => {
         <div className="flex justify-between items-center mb-4">
           <TypographyH2 className="text-xl">Recommended Jobs</TypographyH2>
           <Button variant="ghost" size="sm" className="gap-1" asChild>
-            <Link href="/jobs">
+            <Link href="/dashboard/jobs">
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -318,7 +318,7 @@ const EmployerDashboard = ({ user }) => {
         <div className="flex justify-between items-center mb-4">
           <TypographyH2 className="text-xl">Top Matching Candidates</TypographyH2>
           <Button variant="ghost" size="sm" className="gap-1" asChild>
-            <Link href="/talent-search">
+            <Link href="/dashboard/talent-search">
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -340,7 +340,7 @@ const EmployerDashboard = ({ user }) => {
         <div className="flex justify-between items-center mb-4">
           <TypographyH2 className="text-xl">Recent Applications</TypographyH2>
           <Button variant="ghost" size="sm" className="gap-1" asChild>
-            <Link href="dashboard/applicants">
+            <Link href="/dashboard/applicants">
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>

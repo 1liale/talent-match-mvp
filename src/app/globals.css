@@ -56,6 +56,8 @@
   --color-destructive-border: var(--destructive-border);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-primary-border: var(--primary-border);
+  --scrollbar-thumb: var(--muted-foreground);
+  --scrollbar-track: transparent;
 }
 
 :root {
@@ -175,5 +177,39 @@
     width: 100vw;
     height: 100dvh;
     pointer-events: none;
+  }
+
+  /* Global scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  /* For Webkit browsers like Chrome/Safari/Edge */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--muted-foreground);
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--foreground);
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  /* For specific contexts like job application modal */
+  .job-application-context {
+    --scrollbar-thumb: #a89e82;
   }
 }

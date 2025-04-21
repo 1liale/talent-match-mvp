@@ -1,12 +1,13 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardTitle, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Star, Briefcase, Clock, User, FileText, Trash2, Download, CheckCircle, AlertTriangle } from "lucide-react";
+import { Building, Star, Briefcase, Clock, User, FileText, Trash2, Download, CheckCircle, AlertTriangle, MapPin } from "lucide-react";
 import { TypographyH3, TypographyP, TypographySmall } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { BarChart } from "lucide-react";
 
 // Primary Cards
 const PrimaryCardLarge = ({ icon, title, description, className, ...props }) => {
@@ -111,7 +112,7 @@ const StatsCard = ({
   ...props 
 }) => {
   return (
-    <Card className={cn("p-4", className)} {...props}>
+    <Card className={cn("p-5 hover:shadow-md transition-shadow", className)} {...props}>
       <div className="flex justify-between items-start">
         <div>
           <TypographyP className="text-sm text-muted-foreground mb-1">{label}</TypographyP>
@@ -177,50 +178,74 @@ const ApplicationCard = ({
 /**
  * Job card component for displaying job listings
  */
-const JobCard = ({ 
+export const JobCard = ({ 
   job, 
-  applyUrl, 
-  className, 
-  ...props 
+  applyUrl,
+  compact = false,
+  onApplyClick
 }) => {
-  const { id, title, company, location, salary, matchScore, postDate, logo } = job;
-  
   return (
-    <Card key={id} className={cn("p-5 hover:shadow-md transition-shadow", className)} {...props}>
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex gap-3 items-center">
-          <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
-            {logo ? (
-              <Image src={logo} alt={company} width={30} height={30} />
-            ) : (
-              <Building className="h-5 w-5 text-gray-400" />
+    <Card className="w-full p-5 hover:shadow-md transition-shadow">
+      <div className="flex flex-col gap-4">
+        {/* Job details section */}
+        <div className="space-y-2 sm:space-y-3">
+          <div>
+            <h3 className="text-lg sm:text-xl font-semibold leading-none tracking-tight mb-2 text-foreground">
+              {job.title}
+            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center text-sm text-muted-foreground gap-1 sm:gap-3">
+              <div className="flex items-center gap-1">
+                <Building className="h-3.5 w-3.5" />
+                <span>{job.company}</span>
+              </div>
+              <div className="hidden sm:block text-muted-foreground/60">•</div>
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{job.location}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Job description - only shown in non-compact view */}
+          {!compact && job.description && (
+            <p className="text-sm text-muted-foreground/90 leading-relaxed line-clamp-2">
+              {job.description}
+            </p>
+          )}
+          
+          {/* Tags/badges row */}
+          <div className="flex flex-wrap gap-2">
+            {job.type && (
+              <Badge variant="secondary" className="bg-secondary/30 text-secondary-foreground font-normal">
+                {job.type}
+              </Badge>
+            )}
+            {job.experience && (
+              <Badge variant="secondary" className="bg-secondary/30 text-secondary-foreground font-normal">
+                {job.experience}
+              </Badge>
+            )}
+            {job.postDate && (
+              <Badge variant="outline" className="text-xs text-muted-foreground bg-transparent">
+                {job.postDate}
+              </Badge>
             )}
           </div>
-          <div>
-            <TypographyH3 className="font-medium">{title}</TypographyH3>
-            <TypographyP className="text-sm text-muted-foreground">{company}</TypographyP>
-          </div>
         </div>
-      </div>
-      
-      <div className="flex flex-col gap-2 mb-3">
-        <TypographyP className="text-sm flex items-center gap-1">
-          <Briefcase className="h-4 w-4 text-muted-foreground" />
-          {location}
-        </TypographyP>
-        <TypographyP className="text-sm flex items-center gap-1">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          {postDate}
-        </TypographyP>
-      </div>
-      
-      <div className="flex justify-between items-center">
-        <MatchScore score={matchScore} />
-        <Button variant="primary" size="sm" asChild>
-          <Link href={applyUrl || `/jobs/${id}`}>
-            Apply Now
-          </Link>
-        </Button>
+        
+        {/* Actions and salary section */}
+        <div className="flex items-center justify-between gap-3 w-full">
+          <div className="text-sm font-medium text-muted-foreground">
+            {job.salary}
+          </div>
+          <Button 
+            variant="outline" 
+            className="rounded-full border-primary text-primary hover:bg-primary/5 px-4 sm:px-5"
+            onClick={onApplyClick}
+          >
+            Apply now
+          </Button>
+        </div>
       </div>
     </Card>
   );
@@ -303,74 +328,72 @@ const ResumeCard = ({ resume, onDelete, onReview, isReviewing }) => {
   const hasBeenReviewed = resume.feedback !== null;
   
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-gray-100 rounded-md">
-            {fileTypeIcon}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <TypographyH3 className="text-base font-medium truncate" title={resume.file_name}>
-              {resume.file_name}
-            </TypographyH3>
-            <div className="flex items-center gap-2 mt-1">
-              <TypographySmall className="text-muted-foreground">
-                Uploaded {formatDate(resume.uploaded_at)}
-              </TypographySmall>
-              <span className="text-muted-foreground">•</span>
-              <TypographySmall className="text-muted-foreground">
-                {(resume.file_size / 1000).toFixed(0)} KB
-              </TypographySmall>
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={() => window.open(resume.file_url, '_blank')}
-              title="Download"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="text-destructive hover:text-destructive" 
-              onClick={() => onDelete(resume.id)}
-              title="Delete"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+    <Card className="p-5 hover:shadow-md transition-shadow">
+      <div className="flex items-start gap-3">
+        <div className="p-2 bg-gray-100 rounded-md">
+          {fileTypeIcon}
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <TypographyH3 className="text-base font-medium truncate" title={resume.file_name}>
+            {resume.file_name}
+          </TypographyH3>
+          <div className="flex items-center gap-2 mt-1">
+            <TypographySmall className="text-muted-foreground">
+              Uploaded {formatDate(resume.uploaded_at)}
+            </TypographySmall>
+            <span className="text-muted-foreground">•</span>
+            <TypographySmall className="text-muted-foreground">
+              {(resume.file_size / 1000).toFixed(0)} KB
+            </TypographySmall>
           </div>
         </div>
         
-        <div className="mt-4 flex justify-between items-center">
-          <div>
-            {hasBeenReviewed ? (
-              <Badge variant="secondary" className="gap-1">
-                <CheckCircle className="h-3 w-3" />
-                Reviewed
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                Not Reviewed
-              </Badge>
-            )}
-          </div>
-          
+        <div className="flex gap-2">
           <Button 
-            size="sm"
-            variant={hasBeenReviewed ? "outline" : "default"}
-            onClick={() => onReview(resume)}
-            disabled={isReviewing}
+            size="sm" 
+            variant="ghost" 
+            onClick={() => window.open(resume.file_url, '_blank')}
+            title="Download"
           >
-            {isReviewing ? 'Analyzing...' : (hasBeenReviewed ? 'View Feedback' : 'Get AI Feedback')}
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="text-destructive hover:text-destructive" 
+            onClick={() => onDelete(resume.id)}
+            title="Delete"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
+      </div>
+      
+      <div className="mt-4 flex justify-between items-center">
+        <div>
+          {hasBeenReviewed ? (
+            <Badge variant="secondary" className="gap-1">
+              <CheckCircle className="h-3 w-3" />
+              Reviewed
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Not Reviewed
+            </Badge>
+          )}
+        </div>
+        
+        <Button 
+          size="sm"
+          variant={hasBeenReviewed ? "outline" : "default"}
+          onClick={() => onReview(resume)}
+          disabled={isReviewing}
+        >
+          {isReviewing ? 'Analyzing...' : (hasBeenReviewed ? 'View Feedback' : 'Get AI Feedback')}
+        </Button>
+      </div>
     </Card>
   );
 };

@@ -101,4 +101,77 @@ export async function getUserResumes(userId) {
     console.error('Error fetching user resumes:', error);
     throw error;
   }
+}
+
+/**
+ * Get jobs from Supabase
+ * @param {Object} options - Options for filtering jobs
+ * @param {string} options.sortBy - Sort jobs by 'newest' or 'recommended'
+ * @param {number} options.limit - Limit the number of jobs returned
+ * @returns {Promise<Array>} List of jobs
+ */
+export async function getJobs(options = {}) {
+  try {
+    const { sortBy = 'newest', limit = 10 } = options;
+    
+    // Create Supabase client
+    const supabase = createClient();
+    
+    // Build query
+    let query = supabase
+      .from('jobs')
+      .select('*');
+    
+    // Apply sorting
+    if (sortBy === 'newest') {
+      query = query.order('post_date', { ascending: false });
+    }
+    
+    // Apply limit
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Database error:', error);
+      throw new Error('Failed to fetch jobs');
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get required fields for job applications
+ * @returns {Promise<Object>} Required fields configuration
+ */
+export async function getApplicationRequiredFields() {
+  try {
+    // Create Supabase client
+    const supabase = createClient();
+    
+    // Query the configuration table or use hardcoded values
+    // Note: In a real implementation, this might come from a settings/config table
+    
+    // For now, return hardcoded required fields
+    return {
+      required: {
+        phone: true,
+        resume: true,
+        availability: true,
+        experience: false, // Optional
+        skills: false,     // Optional
+        bio: false,        // Optional
+        socialLinks: false // Optional
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching application required fields:', error);
+    throw error;
+  }
 } 

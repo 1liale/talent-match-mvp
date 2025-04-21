@@ -316,4 +316,46 @@ export async function processResumeWithAI(resumeId, file) {
     console.error('Error processing resume with AI:', error);
     throw error;
   }
+}
+
+/**
+ * Create a job application
+ * @param {Object} applicationData - The application data to save
+ * @returns {Promise<Object>} The created application
+ */
+export async function createJobApplication(applicationData) {
+  try {
+    if (!applicationData.jobId || !applicationData.userId) {
+      throw new Error('Job ID and user ID are required');
+    }
+
+    // Create Supabase client
+    const supabase = createClient();
+    
+    // Insert record into applications table
+    const { data, error } = await supabase
+      .from('applications')
+      .insert([{
+        job_id: applicationData.jobId,
+        user_id: applicationData.userId,
+        resume_id: applicationData.resumeId,
+        cover_letter: applicationData.coverLetter,
+        status: 'pending',
+        application_date: new Date().toISOString(),
+        phone: applicationData.phone,
+        availability: applicationData.availability,
+        skills: applicationData.skills || [],
+        experience: applicationData.experience,
+        social_links: applicationData.socialLinks || {},
+        bio: applicationData.bio
+      }])
+      .select();
+      
+    if (error) throw error;
+    
+    return data[0];
+  } catch (error) {
+    console.error('Error creating job application:', error);
+    throw error;
+  }
 } 

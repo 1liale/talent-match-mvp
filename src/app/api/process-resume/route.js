@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { UnstructuredClient } from "unstructured-client";
 import { Strategy } from "unstructured-client/sdk/models/shared";
 import { CohereClient } from "cohere-ai";
-import mammoth from "mammoth";
 import { createClient } from "@/utils/supabase/server";
 
 // Initialize clients
@@ -34,16 +33,26 @@ export async function POST(request) {
       );
     }
 
-    // Extract text based on file type
-    let resumeText = "";
+    // Get file info
     const fileName = file.name.toLowerCase();
     
-    if (fileName.endsWith(".pdf")) {
-      // Process PDF with Unstructured
+    // Check for supported file types
+    if (!fileName.endsWith(".pdf") && !fileName.endsWith(".docx") && !fileName.endsWith(".doc")) {
+      return NextResponse.json(
+        { error: "Unsupported file format. Please upload PDF or DOCX files." },
+        { status: 400 }
+      );
+    }
+
+    // Extract text using Unstructured API
+    let resumeText = "";
+    
+    try {
+      // Convert file to Buffer
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       
-      // Call the unstructured API with HiRes strategy
+      // Process file with Unstructured
       const response = await unstructured.general.partition({
         partitionParameters: {
           files: {
@@ -51,8 +60,9 @@ export async function POST(request) {
             fileName: fileName,
           },
           strategy: Strategy.HiRes,
-          splitPdfPage: true,
-          splitPdfAllowFailed: true,
+          // Enable PDF splitting only for PDF files
+          splitPdfPage: fileName.endsWith(".pdf"),
+          splitPdfAllowFailed: fileName.endsWith(".pdf"),
           splitPdfConcurrencyLevel: 8
         }
       });
@@ -64,73 +74,69 @@ export async function POST(request) {
         resumeText = response.elements.map(e => e.text).filter(Boolean).join("\n");
       }
       
-    } else if (fileName.endsWith(".docx") || fileName.endsWith(".doc")) {
-      // Process DOCX with Mammoth
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({
-        arrayBuffer: arrayBuffer
-      });
-      resumeText = result.value;
-    } else {
+      // Validate that we have text content
+      if (!resumeText || resumeText.trim() === "") {
+        return NextResponse.json(
+          { error: "Could not extract text from the resume" },
+          { status: 400 }
+        );
+      }
+    } catch (extractionError) {
+      console.error("Error extracting text from document:", extractionError);
       return NextResponse.json(
-        { error: "Unsupported file format. Please upload PDF or DOCX files." },
+        { error: `Failed to process ${fileName.split('.').pop()} file: ${extractionError.message}` },
         { status: 400 }
       );
     }
 
-    // Validate that we have text content
-    if (!resumeText || resumeText.trim() === "") {
-      return NextResponse.json(
-        { error: "Could not extract text from the resume" },
-        { status: 400 }
-      );
-    }
-
-    // Use Cohere to analyze the resume and generate feedback
-    const response = await cohere.generate({
-      prompt: `You are a professional resume analyst with years of experience in HR and recruiting. 
-      Analyze the following resume and provide detailed feedback:
-      
-      1. Extract a list of skills mentioned (technical and soft skills)
-      2. Extract work experience as a list of positions
-      3. Extract education background
-      4. Identify 4-5 strengths of this resume
-      5. Identify 4-5 areas that need improvement
-      6. Provide specific recommendations for improvement
-      7. Give an overall rating from 0.0 to 10.0 (as a floating point number)
-      
-      Format your response as a valid JSON object with these keys: 
-      "skills" (array), 
-      "experience" (array), 
-      "education" (array), 
-      "strengths" (array), 
-      "improvements" (array), 
-      "recommendations" (string), 
-      "overallScore" (number between 0-10 with one decimal precision)
-      
-      IMPORTANT: Return ONLY the JSON object without any additional text, markdown formatting, or code blocks.
-      
-      Resume text:
-      ${resumeText}`,
-      model: "command-r-plus",
-      maxTokens: 2000,
-      temperature: 0.3,
-    });
-    
-    console.log("COHERE RESPONSE", response);
-    
-    // Parse the JSON response from Cohere, handling markdown code blocks if present
-    let feedbackText = response.generations[0].text;
-    
-    // Extract JSON from markdown code blocks if present
-    const jsonMatch = feedbackText.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
-    if (jsonMatch && jsonMatch[1]) {
-      feedbackText = jsonMatch[1];
-    }
-    
-    // Attempt to strip any remaining non-JSON text
+    // Analyze resume with Cohere
     try {
-      // Try to parse directly first
+      // Generate analysis with Cohere
+      const response = await cohere.generate({
+        prompt: `You are a professional resume analyst with years of experience in HR and recruiting. 
+        Analyze the following resume and provide detailed feedback:
+        
+        1. Extract a list of skills mentioned (technical and soft skills)
+        2. Extract work experience as a list of positions
+        3. Extract social links from the resume (github, linkedin, and portfolio / website links)
+        4. Extract education background
+        5. Identify 4-5 strengths of this resume
+        6. Identify 4-5 areas that need improvement
+        7. Give an overall rating from 0.0 to 10.0 (as a floating point number)
+        8. Identify the candidate's years of experience
+        9. Summarize the candidate's bio in 2-3 sentences
+        
+        Format your response as a valid JSON object with these keys: 
+        "skills" (array), 
+        "experience" (array),
+        "social_links" (array),
+        "education" (array), 
+        "strengths" (array), 
+        "improvements" (array), 
+        "recommendations" (string), 
+        "overallScore" (number between 0-10 with one decimal precision)
+        "yearsOfExperience" (number),
+        "bio" (string),
+        
+        IMPORTANT: Return ONLY the JSON object without any additional text, markdown formatting, or code blocks.
+        
+        Resume text:
+        ${resumeText}`,
+        model: "command-r-plus",
+        maxTokens: 2000,
+        temperature: 0.2,
+      });
+      
+      // Parse the JSON response from Cohere
+      let feedbackText = response.generations[0].text;
+      
+      // Extract JSON from markdown code blocks if present
+      const jsonMatch = feedbackText.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
+      if (jsonMatch && jsonMatch[1]) {
+        feedbackText = jsonMatch[1];
+      }
+      
+      // Parse the JSON
       const feedback = JSON.parse(feedbackText);
       
       // Save feedback to Supabase
@@ -155,15 +161,13 @@ export async function POST(request) {
         success: true,
         feedback: feedback
       });
-    } catch (jsonError) {
-      console.error("Error parsing JSON from Cohere response:", jsonError);
-      console.log("Raw response text:", feedbackText);
+    } catch (analysisError) {
+      console.error("Error analyzing resume:", analysisError);
       return NextResponse.json(
-        { error: "Failed to parse AI analysis. Please try again." },
+        { error: "Failed to analyze resume: " + analysisError.message },
         { status: 500 }
       );
     }
-    
   } catch (error) {
     console.error("Error processing resume:", error);
     return NextResponse.json(
